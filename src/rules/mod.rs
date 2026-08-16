@@ -117,3 +117,59 @@ impl Waivers {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn waiving(rules: &[Rule]) -> Waivers {
+        Waivers(rules.iter().copied().collect())
+    }
+
+    #[test]
+    fn snake_case_handles_acronyms_and_digits() {
+        for (input, expected) in [
+            ("Credentials", "credentials"),
+            ("authenticate", "authenticate"),
+            ("HTTPClient", "http_client"),
+            ("UserID", "user_id"),
+            ("parse2Json", "parse2_json"),
+            ("_Private", "_private"),
+            ("already_snake", "already_snake"),
+        ] {
+            assert_eq!(to_snake_case(input), expected, "for `{input}`");
+        }
+    }
+
+    #[test]
+    fn waiving_a_rule_deactivates_what_depends_on_it() {
+        // How `constants/` files become free-named topic labels: with no
+        // single public name, there is nothing to derive a filename from.
+        let waivers = waiving(&[Rule::SinglePublicName]);
+        assert!(!waivers.active(Rule::FilenameMatchesPublicName));
+        // But the casing check has no such dependency and still applies.
+        assert!(waivers.active(Rule::FilenameCasing));
+
+        // How `{root}/app/**` works: no kind folder, nothing to compare to.
+        let waivers = waiving(&[Rule::FileMustBeInKindFolder]);
+        assert!(!waivers.active(Rule::KindMatchesDeclaration));
+        assert!(waivers.active(Rule::SinglePublicName));
+    }
+
+    #[test]
+    fn nothing_is_waived_by_default() {
+        let waivers = Waivers::default();
+        for rule in [
+            Rule::FileMustBeInKindFolder,
+            Rule::NoMixedChildren,
+            Rule::KindFolderIsLeaf,
+            Rule::RootLanguageMatch,
+            Rule::FilenameCasing,
+            Rule::FilenameMatchesPublicName,
+            Rule::SinglePublicName,
+            Rule::KindMatchesDeclaration,
+        ] {
+            assert!(waivers.active(rule), "{} should be active", rule.as_str());
+        }
+    }
+}
