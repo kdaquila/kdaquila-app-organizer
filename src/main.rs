@@ -86,7 +86,11 @@ fn check(path: &Path, format: Format) -> Result<ExitCode, String> {
     let report = engine.check(path, &project_root);
 
     let output = match format {
-        Format::Text => diagnostics::render_text(&report.diagnostics, report.files_checked),
+        Format::Text => diagnostics::render_text(
+            &report.diagnostics,
+            report.files_checked,
+            &report.declared_roots,
+        ),
         Format::Json => diagnostics::render_json(&report.diagnostics, report.files_checked),
     };
     println!("{}", output.trim_end());

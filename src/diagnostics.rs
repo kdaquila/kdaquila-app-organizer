@@ -98,7 +98,7 @@ impl Diagnostic {
 }
 
 /// The `--format text` renderer.
-pub fn render_text(diagnostics: &[Diagnostic], files_checked: usize) -> String {
+pub fn render_text(diagnostics: &[Diagnostic], files_checked: usize, roots: &[String]) -> String {
     let mut out = String::new();
     for diagnostic in diagnostics {
         out.push_str(&render_one(diagnostic));
@@ -106,6 +106,15 @@ pub fn render_text(diagnostics: &[Diagnostic], files_checked: usize) -> String {
     }
     out.push_str(&summary(diagnostics.len(), files_checked));
     out.push('\n');
+    // "no violations" after looking at nothing is a lie of omission: the
+    // usual cause is being pointed somewhere above or below the roots.
+    if files_checked == 0 {
+        out.push_str(&format!(
+            "note: nothing here sits under a declared root ({}); check from the project root, or declare roots in {}\n",
+            roots.join(", "),
+            crate::config::CONFIG_FILE,
+        ));
+    }
     out
 }
 
