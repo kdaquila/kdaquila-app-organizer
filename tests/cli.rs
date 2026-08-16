@@ -54,6 +54,8 @@ scenarios!(
     // layer 2 — file naming
     name_mismatch,
     bad_filename_casing,
+    unfixable_filename,
+    conflicting_rename,
     // layer 3 — content
     two_public_names,
     no_public_names,
@@ -63,6 +65,12 @@ scenarios!(
     pep695_alias,
     overload,
     type_checking,
+    type_var,
+    stray_names_in_constants,
+    invalid_syntax,
+    not_utf8,
+    // one structural cause across many files
+    src_layout,
     // roots, extensions, and config
     foreign_extension,
     default_exceptions,

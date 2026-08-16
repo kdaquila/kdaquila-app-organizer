@@ -20,6 +20,9 @@ pub enum Rule {
     KindFolderIsLeaf,
     /// A tracked file's language matches the language its root is declared as.
     RootLanguageMatch,
+    /// The tool could read and parse the file at all. Not a convention, but
+    /// staying silent about a file it could not open would be worse.
+    FileIsReadable,
     /// Layer 2: the filename obeys the casing declared for `{files}`.
     FilenameCasing,
     /// Layer 2: the filename is the snake_case of the module's public name.
@@ -37,6 +40,7 @@ impl Rule {
             Rule::NoMixedChildren => "no_mixed_children",
             Rule::KindFolderIsLeaf => "kind_folder_is_leaf",
             Rule::RootLanguageMatch => "root_language_match",
+            Rule::FileIsReadable => "file_is_readable",
             Rule::FilenameCasing => "filename_casing",
             Rule::FilenameMatchesPublicName => "filename_matches_public_name",
             Rule::SinglePublicName => "single_public_name",
@@ -164,6 +168,7 @@ mod tests {
             Rule::NoMixedChildren,
             Rule::KindFolderIsLeaf,
             Rule::RootLanguageMatch,
+            Rule::FileIsReadable,
             Rule::FilenameCasing,
             Rule::FilenameMatchesPublicName,
             Rule::SinglePublicName,

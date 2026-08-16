@@ -19,7 +19,7 @@ use diagnostics::Diagnostic;
 use grammar::Pattern;
 use lang::LanguageProfile;
 use rules::exceptions::Exceptions;
-use rules::{content, folder};
+use rules::{Rule, content, folder};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -160,19 +160,35 @@ impl Engine {
 
             let (kind, placement) = folder::check_placement(compiled, file, &waivers);
             diagnostics.extend(placement);
-            diagnostics.extend(folder::check_filename_casing(compiled, file, &waivers));
 
-            if let Some(language) = &compiled.content
-                && let Ok(source) = std::fs::read_to_string(project_root.join(file))
-            {
-                diagnostics.extend(content::check(
-                    language.as_ref(),
-                    &source,
-                    file,
-                    kind.as_ref(),
-                    &waivers,
-                ));
+            let mut content_diagnostics = Vec::new();
+            if let Some(language) = &compiled.content {
+                match std::fs::read_to_string(project_root.join(file)) {
+                    Ok(source) => {
+                        content_diagnostics = content::check(
+                            language.as_ref(),
+                            &source,
+                            file,
+                            kind.as_ref(),
+                            &waivers,
+                        );
+                    }
+                    // Counting a file as checked and then saying nothing about
+                    // it is the one outcome that would be a lie.
+                    Err(error) if waivers.active(Rule::FileIsReadable) => {
+                        content_diagnostics.push(content::unreadable(file, &error.to_string()));
+                    }
+                    Err(_) => {}
+                }
             }
+
+            // When the content layer has already prescribed a filename, that
+            // rename fixes the casing too; complaining separately would offer
+            // two different names for one file.
+            if !content::prescribes_a_filename(&content_diagnostics) {
+                diagnostics.extend(folder::check_filename_casing(compiled, file, &waivers));
+            }
+            diagnostics.extend(content_diagnostics);
         }
 
         for (dir, children) in &tree.dirs {

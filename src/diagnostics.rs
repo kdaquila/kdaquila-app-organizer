@@ -100,8 +100,8 @@ impl Diagnostic {
 /// The `--format text` renderer.
 pub fn render_text(diagnostics: &[Diagnostic], files_checked: usize, roots: &[String]) -> String {
     let mut out = String::new();
-    for diagnostic in diagnostics {
-        out.push_str(&render_one(diagnostic));
+    for group in group(diagnostics) {
+        out.push_str(&render_one(group[0], &group));
         out.push('\n');
     }
     out.push_str(&summary(diagnostics.len(), files_checked));
@@ -134,7 +134,35 @@ fn plural(count: usize, one: &str, many: &str) -> String {
     format!("{count} {}", if count == 1 { one } else { many })
 }
 
-fn render_one(diagnostic: &Diagnostic) -> String {
+/// One structural mistake usually shows up in many files at once — a `src/`
+/// with a package directory in it fails the same way for every module beneath.
+/// Repeating the explanation and the pattern list per file buries the
+/// diagnostics that really are per-file, so identical ones share a block.
+///
+/// Only the text renderer groups; `--format json` stays one entry per file,
+/// which is what a consumer iterating over files wants.
+fn group(diagnostics: &[Diagnostic]) -> Vec<Vec<&Diagnostic>> {
+    let mut groups: Vec<Vec<&Diagnostic>> = Vec::new();
+    for diagnostic in diagnostics {
+        let mergeable = |other: &Diagnostic| {
+            // A line number makes a diagnostic specific to one file's contents.
+            diagnostic.line.is_none()
+                && other.line.is_none()
+                && other.tag == diagnostic.tag
+                && other.rule == diagnostic.rule
+                && other.message == diagnostic.message
+                && other.notes == diagnostic.notes
+                && other.help == diagnostic.help
+        };
+        match groups.iter_mut().find(|g| mergeable(g[0])) {
+            Some(existing) => existing.push(diagnostic),
+            None => groups.push(vec![diagnostic]),
+        }
+    }
+    groups
+}
+
+fn render_one(diagnostic: &Diagnostic, group: &[&Diagnostic]) -> String {
     let mut out = format!(
         "error[{}]: {}\n",
         diagnostic.tag.as_str(),
@@ -143,6 +171,9 @@ fn render_one(diagnostic: &Diagnostic) -> String {
     match diagnostic.line {
         Some(line) => out.push_str(&format!("  --> {}:{}\n", diagnostic.path, line)),
         None => out.push_str(&format!("  --> {}\n", diagnostic.path)),
+    }
+    for also in &group[1..] {
+        out.push_str(&format!("      {}\n", also.path));
     }
     if !diagnostic.notes.is_empty() {
         out.push_str("   |\n");

@@ -36,6 +36,15 @@ impl Denotation {
             Denotation::Value => "a value",
         }
     }
+
+    /// Pluralised, for the one diagnostic that can name several at once.
+    pub fn describe_plural(self) -> &'static str {
+        match self {
+            Denotation::Callable => "callables",
+            Denotation::Type => "types",
+            Denotation::Value => "values",
+        }
+    }
 }
 
 /// One top-level binding that forms part of a module's public surface.
@@ -45,22 +54,26 @@ pub struct PublicName {
     pub denotes: Denotation,
     /// 1-based line of the declaration.
     pub line: usize,
+    /// How this language would spell the same binding as a type alias, when
+    /// that is a plausible thing to have meant. Only the language knows when
+    /// it is: `X = int` could have been an alias, `X = compute()` could not.
+    pub type_alias_hint: Option<String>,
+}
+
+/// What a language profile makes of one file.
+#[derive(Debug, Clone, Default)]
+pub struct Module {
+    /// Public names in source order, deduped by name.
+    pub names: Vec<PublicName>,
+    /// The parser hit syntax it could not make sense of, so `names` may be
+    /// incomplete. Reporting *that* beats reporting its consequences.
+    pub has_syntax_errors: bool,
 }
 
 pub trait LanguageProfile {
     fn language(&self) -> Language;
 
-    /// The module's public names, in source order, deduped by name.
-    fn public_names(&self, source: &str) -> Vec<PublicName>;
-
-    /// How this language spells a type alias, for the one diagnostic where
-    /// moving the file is probably not what the author meant: a bare
-    /// `X = int` sitting in `types/` denotes a value, but the author almost
-    /// certainly wanted an alias.
-    fn type_alias_hint(&self, name: &str) -> Option<String> {
-        let _ = name;
-        None
-    }
+    fn read(&self, source: &str) -> Module;
 }
 
 /// The content-layer profile for a language, if one has shipped yet.

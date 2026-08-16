@@ -102,7 +102,13 @@ pub fn check_filename_casing(
         walk::display(rel),
         format!("`{name}` is not {}", casing.as_str()),
     );
-    if let Some(suggestion) = casing.suggest(stem) {
+    // Only offer a rename the rule would actually accept: snake_casing
+    // `foo bar` or `Foo-Bar` leaves them non-conforming, and prescribing the
+    // name that was just rejected is worse than saying nothing.
+    if let Some(suggestion) = casing.suggest(stem)
+        && suggestion != stem
+        && casing.matches(&suggestion)
+    {
         diagnostic = diagnostic.help(format!("rename to {suggestion}{extension}"));
     }
     Some(diagnostic)
