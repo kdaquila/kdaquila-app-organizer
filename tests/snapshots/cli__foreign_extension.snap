@@ -1,0 +1,9 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (foreign_extension))
+---
+exit: 1
+error[root]: `src/` is declared python, but contains rust files
+  --> src/features/geometry/functions/intersect.rs
+
+checked 1 file -- 1 violation

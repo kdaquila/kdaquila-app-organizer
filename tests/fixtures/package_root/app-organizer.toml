@@ -1,0 +1,3 @@
+[roots]
+"src/my_package" = "python"
+tests            = "python"

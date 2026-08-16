@@ -1,0 +1,20 @@
+---
+source: tests/cli.rs
+expression: "serde_json::to_string_pretty(&parsed).unwrap()"
+---
+{
+  "diagnostics": [
+    {
+      "help": [
+        "move to src/features/auth/types/credentials.py"
+      ],
+      "line": 1,
+      "message": "`Credentials` denotes a type but lives in functions/",
+      "path": "src/features/auth/functions/credentials.py",
+      "rule": "kind_matches_declaration",
+      "tag": "kind"
+    }
+  ],
+  "error_count": 1,
+  "files_checked": 1
+}

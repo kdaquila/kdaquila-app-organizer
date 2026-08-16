@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (custom_roots))
+---
+exit: 0
+checked 2 files -- no violations

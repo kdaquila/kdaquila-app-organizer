@@ -1,0 +1,12 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (two_public_names))
+---
+exit: 1
+error[content]: file declares 2 public names, expected 1
+  --> src/features/auth/functions/authenticate.py:5
+   |
+   | public names: authenticate, validate_token
+   | rename `validate_token` to `_validate_token`, or move it to its own file
+
+checked 1 file -- 1 violation

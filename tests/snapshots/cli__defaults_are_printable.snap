@@ -1,0 +1,81 @@
+---
+source: tests/cli.rs
+expression: "String::from_utf8_lossy(&output.stdout)"
+---
+[roots]
+src = "python"
+tests = "python"
+
+[python]
+kinds = [
+    "functions",
+    "types",
+    "constants",
+]
+patterns = [
+    "{root}/{folder1}/{folder2}/{folder3}/{kind}/{files}",
+    "{root}/{folder1}/{folder2}/{kind}/{files}",
+    "{root}/{folder1}/{kind}/{files}",
+]
+
+[python.segments.files]
+casing = "snake_case"
+
+[python.segments.folder1]
+one_of = [
+    "app",
+    "features",
+    "pages",
+    "shared",
+]
+
+[python.segments.folder2]
+not_one_of = "@kinds"
+casing = "snake_case"
+
+[python.segments.folder3]
+not_one_of = "@kinds"
+casing = "snake_case"
+
+[python.segments.kind]
+one_of = "@kinds"
+leaf_only = true
+
+[[python.exceptions]]
+path = "**/constants/*.py"
+waive = ["single_public_name"]
+reason = "constants files group related values by topic"
+
+[[python.exceptions]]
+path = "**/__init__.py"
+waive = [
+    "file_must_be_in_kind_folder",
+    "single_public_name",
+]
+reason = "Python requires package markers at every level; they re-export"
+
+[[python.exceptions]]
+path = "**/py.typed"
+waive = ["file_must_be_in_kind_folder"]
+reason = "PEP 561 requires this exact path"
+
+[[python.exceptions]]
+path = "tests/**/conftest.py"
+waive = [
+    "file_must_be_in_kind_folder",
+    "single_public_name",
+]
+reason = "pytest requires this exact filename for fixture discovery"
+
+[[python.exceptions]]
+path = "**/__main__.py"
+waive = [
+    "file_must_be_in_kind_folder",
+    "single_public_name",
+]
+reason = "Python requires this exact filename for `python -m pkg`"
+
+[[python.exceptions]]
+path = "{root}/app/**"
+waive = ["file_must_be_in_kind_folder"]
+reason = "the composition root wires things together; kinds add nothing there"

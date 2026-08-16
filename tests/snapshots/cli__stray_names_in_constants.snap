@@ -1,0 +1,13 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (stray_names_in_constants))
+---
+exit: 1
+error[kind]: 2 public names denote callables but live in constants/
+  --> src/features/auth/constants/http.py:5
+   |
+   | callables: fetch, post
+   |
+   = move them into functions/
+
+checked 1 file -- 1 violation

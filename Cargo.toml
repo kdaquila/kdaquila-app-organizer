@@ -1,0 +1,23 @@
+[package]
+name = "kdaquila-app-organizer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.6.6", features = ["derive"] }
+globset = "0.4.20"
+ignore = "0.4.33"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+toml = "1.1.4"
+tree-sitter = "0.26.12"
+tree-sitter-python = "0.25.0"
+
+[dev-dependencies]
+assert_cmd = "2.2.2"
+insta = "1.48.0"
+
+# The crate name is scoped for publishing; the command stays typable.
+[[bin]]
+name = "app-organizer"
+path = "src/main.rs"

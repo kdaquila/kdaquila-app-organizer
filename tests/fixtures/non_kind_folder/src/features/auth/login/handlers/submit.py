@@ -1,0 +1,2 @@
+def submit() -> None:
+    pass

@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (nested_roots))
+---
+exit: 2
+app-organizer: root `src/my_package` is nested inside root `src`

@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (user_exception))
+---
+exit: 0
+checked 3 files -- no violations

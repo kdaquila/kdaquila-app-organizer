@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (no_public_names))
+---
+exit: 1
+error[content]: file declares no public names, expected 1
+  --> src/features/auth/functions/authenticate.py
+   |
+   | every module names one public thing, and the filename is that name
+
+checked 1 file -- 1 violation

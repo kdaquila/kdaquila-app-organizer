@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (name_mismatch))
+---
+exit: 1
+error[naming]: file name does not match public name `Credentials`
+  --> src/features/auth/types/creds.py:1
+   |
+   = rename to credentials.py
+
+checked 1 file -- 1 violation

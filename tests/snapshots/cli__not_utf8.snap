@@ -1,0 +1,12 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (not_utf8))
+---
+exit: 1
+error[content]: could not read this file as UTF-8
+  --> src/features/auth/functions/broken.py
+   |
+   | stream did not contain valid UTF-8
+   | its contents are not checked
+
+checked 1 file -- 1 violation

@@ -281,12 +281,46 @@ web   = "typescript"
 ```
 
 Each language declares its own roots, and roots may not overlap. Keying the map *by root*
-makes that unrepresentable rather than merely validated — a duplicate TOML key is a parse
-error. It also gives the walker trivial dispatch: match the first path component, pick the
-profile.
+makes duplicates unrepresentable rather than merely validated — a duplicate TOML key is a
+parse error. It also gives the walker trivial dispatch: find the root a path sits under,
+pick the profile.
 
 Default with no config: `src` and `tests` → python. A TypeScript-only repo writes two
 lines; everyone else writes nothing.
+
+### Roots may be more than one component deep
+
+```toml
+[roots]
+"src/my_package" = "python"
+```
+
+Any installable Python project has a package directory — `src/my_package/` — and nothing
+can be done about it: `import features.auth` does not work, the distribution needs
+`my_package` to be the importable name. Without this, every module in every src-layout
+project fails `folder1`, which is the mainstream layout and would have been the tool's
+first impression on most real repos.
+
+Absorbing the package level into the root, rather than adding a `{package}` segment to
+every pattern variant, is the right shape because it is *true*: the package directory is
+the root of the source tree. Everything above it — `pyproject.toml`, `setup.py`, a
+`src/` that exists only to keep the package off `sys.path` — is packaging scaffolding, not
+application structure, and the tool has no business grading it. A `{package}` segment
+would instead double the pattern list to express a level that only ever holds one name.
+
+The consequences follow from that same reading:
+
+- **The longest declared root wins.** A path belongs to the most specific root containing
+  it.
+- **Roots still may not overlap**, and this is now checked rather than being unrepresentable:
+  declaring both `src` and `src/my_package` is a hard error. Longest-match would silently
+  pick one, and "which profile governs this file" should never be a tiebreak.
+- **`{root}` in an exception glob expands to the whole root**, so `{root}/app/**` becomes
+  `src/my_package/app/**` — which is exactly why the placeholder exists rather than a
+  hardcoded `src/app/**`.
+- **Files above the root are invisible**, so `src/setup_helpers.py` is governed by nothing.
+- **The `{root}` pattern segment is matched before the pattern**, not by it, since it is
+  the one segment that can span several components.
 
 **Rejected: inferring the language per root from file extensions.** Attractive for
 zero-config (a mixed root would just be a hard error), but it accumulated special cases
