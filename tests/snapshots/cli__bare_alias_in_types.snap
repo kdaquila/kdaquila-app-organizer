@@ -1,0 +1,12 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (bare_alias_in_types))
+---
+exit: 1
+error[kind]: `UserId` denotes a value but lives in types/
+  --> src/features/auth/types/user_id.py:1
+   |
+   = move to src/features/auth/constants/user_id.py
+   = or write it as an alias: type UserId = ...
+
+checked 1 file -- 1 violation

@@ -1,0 +1,15 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (too_deep))
+---
+exit: 1
+error[folder]: no pattern matched
+  --> src/features/auth/login/forms/fields/functions/render.py
+   |
+   | no pattern places files 7 folders below the project root
+   |
+   = tried: {root}/{folder1}/{folder2}/{folder3}/{kind}/{files}
+            {root}/{folder1}/{folder2}/{kind}/{files}
+            {root}/{folder1}/{kind}/{files}
+
+checked 1 file -- 1 violation

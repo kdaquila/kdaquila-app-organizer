@@ -1,0 +1,4 @@
+[[python.exceptions]]
+path   = "tests/**"
+waive  = ["single_public_name"]
+reason = "prefer classic multi-test modules"
