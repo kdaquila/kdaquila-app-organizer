@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (package_root))
+---
+exit: 0
+checked 5 files -- no violations

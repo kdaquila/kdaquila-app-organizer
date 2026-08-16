@@ -16,7 +16,7 @@ pub mod walk;
 
 use config::{Config, ConfigError, Language, Profile};
 use diagnostics::Diagnostic;
-use grammar::Pattern;
+use grammar::{Pattern, Root};
 use lang::LanguageProfile;
 use rules::exceptions::Exceptions;
 use rules::{Rule, content, folder};
@@ -79,6 +79,7 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(config: Config) -> Result<Engine, Error> {
+        config.check_roots().map_err(Error::Invalid)?;
         let mut languages = BTreeMap::new();
 
         for language in Language::ALL {
@@ -131,7 +132,7 @@ impl Engine {
         let mut files_checked = 0;
 
         for file in &tree.files {
-            let Some(compiled) = self.owner(file) else {
+            let Some((compiled, root)) = self.owner(file) else {
                 continue;
             };
             // Extensions outside every language's list are untracked: a
@@ -146,19 +147,16 @@ impl Engine {
             files_checked += 1;
 
             let waivers = compiled.exceptions.waivers_for(&walk::display(file));
-            let root = walk::components(file)
-                .and_then(|c| c.first().copied())
-                .unwrap_or_default();
 
             if let Some(diagnostic) =
-                folder::check_root_language(file, root, compiled.language, actual, &waivers)
+                folder::check_root_language(file, root.name, compiled.language, actual, &waivers)
             {
                 // A Rust file in a Python root is not then judged as Python.
                 diagnostics.push(diagnostic);
                 continue;
             }
 
-            let (kind, placement) = folder::check_placement(compiled, file, &waivers);
+            let (kind, placement) = folder::check_placement(compiled, root, file, &waivers);
             diagnostics.extend(placement);
 
             let mut content_diagnostics = Vec::new();
@@ -192,7 +190,7 @@ impl Engine {
         }
 
         for (dir, children) in &tree.dirs {
-            let Some(compiled) = self.owner(dir) else {
+            let Some((compiled, _)) = self.owner(dir) else {
                 continue;
             };
             let waivers = compiled.exceptions.waivers_for(&walk::display(dir));
@@ -207,12 +205,13 @@ impl Engine {
         }
     }
 
-    /// The profile governing a path, by its first component. Paths outside
-    /// every declared root are invisible to the tool.
-    fn owner(&self, rel: &Path) -> Option<&Compiled> {
-        let root = walk::components(rel)?.first().copied()?;
-        let language = self.config.roots.get(root)?;
-        self.languages.get(language)
+    /// The profile governing a path, and the root it was found under. Paths
+    /// outside every declared root are invisible to the tool.
+    fn owner<'a>(&'a self, rel: &Path) -> Option<(&'a Compiled, Root<'a>)> {
+        let components = walk::components(rel)?;
+        let (name, language, depth) = self.config.root_for(&components)?;
+        let compiled = self.languages.get(&language)?;
+        Some((compiled, Root { name, depth }))
     }
 }
 

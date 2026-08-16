@@ -74,6 +74,16 @@ src   = "python"
 tests = "python"
 ```
 
+A root may be more than one component deep, which is how src-layout projects work —
+the package directory *is* the root of the source tree, and the packaging
+scaffolding above it is governed by nothing:
+
+```toml
+[roots]
+"src/my_package" = "python"
+tests            = "python"
+```
+
 `app-organizer init` writes the full defaults into `app-organizer.toml` so
 overrides are edits to something visible rather than guesses at what is being
 replaced. Anything deleted from that file falls back to its default —

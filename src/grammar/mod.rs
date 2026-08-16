@@ -4,7 +4,7 @@
 pub mod matcher;
 pub mod pattern;
 
-pub use matcher::{MatchOutcome, Matched, match_path};
+pub use matcher::{MatchOutcome, Matched, Root, match_path};
 pub use pattern::{ParseError, Pattern};
 
 /// The segment name that binds the file itself. Always last.

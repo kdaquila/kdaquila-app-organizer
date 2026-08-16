@@ -8,12 +8,26 @@ use super::{KIND, ROOT, pattern::Pattern};
 use crate::config::{NameSet, Profile};
 use std::collections::BTreeMap;
 
+/// The declared root a path was found under, already resolved.
+///
+/// `{root}` is matched before the pattern rather than by it, because a root
+/// may span several components (`src/my_package`) while every other segment
+/// is exactly one.
+#[derive(Debug, Clone, Copy)]
+pub struct Root<'a> {
+    pub name: &'a str,
+    pub depth: usize,
+}
+
 #[derive(Debug, Clone)]
 pub struct Matched {
     /// Index into the pattern list, for reporting which variant applied.
     pub pattern: usize,
     /// Segment name -> the path component that bound to it.
     pub bindings: BTreeMap<String, String>,
+    /// Position of the `{kind}` component in the *full* path, when the
+    /// matched variant has one.
+    pub kind_index: Option<usize>,
 }
 
 impl Matched {
@@ -39,21 +53,31 @@ pub enum MatchOutcome {
 pub fn match_path(
     patterns: &[Pattern],
     profile: &Profile,
-    roots: &[String],
+    root: Root<'_>,
     dirs: &[&str],
 ) -> MatchOutcome {
+    // Everything below the root; the root itself is already accounted for.
+    let below = &dirs[root.depth.min(dirs.len())..];
     let mut best: Option<(usize, Vec<String>)> = None;
 
     for (index, pattern) in patterns.iter().enumerate() {
-        let segments = pattern.dir_segments();
-        if segments.len() != dirs.len() {
+        // The `{root}` segment is the first, and it is already matched.
+        let segments = &pattern.dir_segments()[1..];
+        if segments.len() != below.len() {
             continue;
         }
-        match match_one(pattern, profile, roots, dirs) {
-            Ok(bindings) => {
+        match match_one(segments, profile, below) {
+            Ok(mut bindings) => {
+                bindings.insert(ROOT.to_string(), root.name.to_string());
+                let kind_index = pattern
+                    .segments
+                    .iter()
+                    .position(|segment| segment == KIND)
+                    .map(|at| root.depth + at - 1);
                 return MatchOutcome::Matched(Matched {
                     pattern: index,
                     bindings,
+                    kind_index,
                 });
             }
             Err((depth, notes)) => {
@@ -67,9 +91,10 @@ pub fn match_path(
     let notes = match best {
         Some((_, notes)) => notes,
         None => vec![format!(
-            "no pattern places files {} folder{} below the project root",
-            dirs.len(),
-            if dirs.len() == 1 { "" } else { "s" }
+            "no pattern places files {} folder{} below `{}/`",
+            below.len(),
+            if below.len() == 1 { "" } else { "s" },
+            root.name
         )],
     };
     MatchOutcome::NoMatch { notes }
@@ -77,29 +102,14 @@ pub fn match_path(
 
 /// `Ok(bindings)`, or `Err((index of the failing segment, explanation))`.
 fn match_one(
-    pattern: &Pattern,
+    segments: &[String],
     profile: &Profile,
-    roots: &[String],
     dirs: &[&str],
 ) -> Result<BTreeMap<String, String>, (usize, Vec<String>)> {
     let mut bindings = BTreeMap::new();
 
-    for (index, segment) in pattern.dir_segments().iter().enumerate() {
+    for (index, segment) in segments.iter().enumerate() {
         let component = dirs[index];
-
-        if segment == ROOT {
-            if !roots.iter().any(|r| r == component) {
-                return Err((
-                    index,
-                    vec![
-                        format!("`{component}` is not a declared root"),
-                        format!("declared roots: {}", roots.join(", ")),
-                    ],
-                ));
-            }
-            bindings.insert(segment.clone(), component.to_string());
-            continue;
-        }
 
         let Some(rule) = profile.segments.get(segment) else {
             bindings.insert(segment.clone(), component.to_string());

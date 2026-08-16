@@ -218,6 +218,47 @@ impl Config {
         }
     }
 
+    /// The declared root that owns a path, if any.
+    ///
+    /// A root may be more than one component deep — `src/my_package` — because
+    /// in an installable Python project the package directory *is* the root of
+    /// the source tree, and nothing above it is part of the graded structure.
+    /// The longest match wins, so a nested root beats the one containing it.
+    pub fn root_for(&self, components: &[&str]) -> Option<(&str, Language, usize)> {
+        self.roots
+            .iter()
+            .filter_map(|(root, language)| {
+                let depth = root.split('/').count();
+                (components.len() >= depth && components[..depth].join("/") == *root).then_some((
+                    root.as_str(),
+                    *language,
+                    depth,
+                ))
+            })
+            .max_by_key(|(_, _, depth)| *depth)
+    }
+
+    /// Roots may not overlap: a path must belong to exactly one, and nesting
+    /// one inside another would make "which profile governs this" ambiguous
+    /// in ways no longest-match rule can make honest.
+    pub fn check_roots(&self) -> Result<(), String> {
+        for root in self.roots.keys() {
+            if root.is_empty() || root.starts_with('/') || root.ends_with('/') {
+                return Err(format!(
+                    "root `{root}` must be a relative path with no leading or trailing slash"
+                ));
+            }
+            if let Some(outer) = self
+                .roots
+                .keys()
+                .find(|other| *other != root && root.starts_with(&format!("{other}/")))
+            {
+                return Err(format!("root `{root}` is nested inside root `{outer}`"));
+            }
+        }
+        Ok(())
+    }
+
     /// The roots declared for one language, in declaration order.
     pub fn roots_for(&self, language: Language) -> Vec<String> {
         self.roots

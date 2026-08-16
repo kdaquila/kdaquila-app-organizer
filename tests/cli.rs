@@ -76,6 +76,8 @@ scenarios!(
     default_exceptions,
     user_exception,
     custom_roots,
+    package_root,
+    nested_roots,
 );
 
 #[test]

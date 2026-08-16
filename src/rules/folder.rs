@@ -8,7 +8,7 @@ use super::{KindSlot, Rule, Waivers};
 use crate::Compiled;
 use crate::config::Language;
 use crate::diagnostics::{Diagnostic, Tag};
-use crate::grammar::{KIND, MatchOutcome, match_path};
+use crate::grammar::{KIND, MatchOutcome, Root, match_path};
 use crate::walk;
 use std::path::Path;
 
@@ -17,6 +17,7 @@ use std::path::Path;
 /// Returns the kind folder it landed in, when a pattern matched and named one.
 pub fn check_placement(
     compiled: &Compiled,
+    root: Root<'_>,
     rel: &Path,
     waivers: &Waivers,
 ) -> (Option<KindSlot>, Vec<Diagnostic>) {
@@ -30,17 +31,10 @@ pub fn check_placement(
         return (None, Vec::new());
     };
 
-    match match_path(
-        &compiled.patterns,
-        &compiled.profile,
-        &compiled.roots,
-        &dirs,
-    ) {
+    match match_path(&compiled.patterns, &compiled.profile, root, &dirs) {
         MatchOutcome::Matched(matched) => {
-            let slot = compiled.patterns[matched.pattern]
-                .segments
-                .iter()
-                .position(|segment| segment == KIND)
+            let slot = matched
+                .kind_index
                 .zip(matched.kind())
                 .map(|(index, name)| KindSlot {
                     name: name.to_string(),

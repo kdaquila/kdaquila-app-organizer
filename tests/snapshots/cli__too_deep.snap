@@ -6,7 +6,7 @@ exit: 1
 error[folder]: no pattern matched
   --> src/features/auth/login/forms/fields/functions/render.py
    |
-   | no pattern places files 7 folders below the project root
+   | no pattern places files 6 folders below `src/`
    |
    = tried: {root}/{folder1}/{folder2}/{folder3}/{kind}/{files}
             {root}/{folder1}/{folder2}/{kind}/{files}
