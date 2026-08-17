@@ -2,14 +2,15 @@
 //!
 //! An exception is not a path allowlist — it names a glob and the rules that
 //! do not apply beneath it. Globs may use `{root}`, which expands to whatever
-//! the `[roots]` map declares for that profile: hardcoding `src/app/**` would
-//! break a repo whose root is `source/`, and `**/app/**` would wrongly match
-//! an ordinary folder that happens to be named `app`.
+//! the `[roots]` map declares for that profile: hardcoding `src/lib.rs` would
+//! break a crate whose root is `source/`, and `**/lib.rs` would wrongly match
+//! a nested file that happens to be called that.
 
 use super::{Rule, Waivers};
 use crate::config::Profile;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 
+/// Compiled exception globs, and what each one waives.
 pub struct Exceptions {
     globs: GlobSet,
     /// Parallel to the globs: the rules each one waives.

@@ -4,6 +4,6 @@ expression: check(stringify! (unfixable_filename))
 ---
 exit: 1
 error[naming]: `foo bar.py` is not snake_case
-  --> src/features/auth/constants/foo bar.py
+  --> src/features/auth/foo bar.py
 
 checked 1 file -- 1 violation

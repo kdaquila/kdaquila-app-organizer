@@ -3,8 +3,8 @@ source: tests/cli.rs
 expression: check(stringify! (name_mismatch))
 ---
 exit: 1
-error[naming]: file name does not match public name `Credentials`
-  --> src/features/auth/types/creds.py:1
+error[naming]: file name does not match its export `class Credentials`
+  --> src/features/auth/creds.py:1
    |
    = rename to credentials.py
 

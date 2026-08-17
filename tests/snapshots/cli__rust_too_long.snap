@@ -1,0 +1,13 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (rust_too_long))
+---
+exit: 1
+error[size]: 209 lines of code, and the budget is 200
+  --> src/tally.rs
+   |
+   | blank lines and comments are not counted
+   |
+   = pull a private helper out into its own file, or split the export in two
+
+checked 1 file -- 1 violation

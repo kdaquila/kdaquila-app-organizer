@@ -1,4 +1,10 @@
+[roots]
+src = "python"
+
+[python]
+max_file_lines = 8
+
 [[python.exceptions]]
-path   = "tests/**"
-waive  = ["single_public_name"]
-reason = "prefer classic multi-test modules"
+path   = "{root}/legacy/**"
+waive  = ["single_primary_export"]
+reason = "the legacy tree is frozen, not being reorganised"

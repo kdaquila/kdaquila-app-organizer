@@ -1,2 +1,0 @@
-def container() -> None:
-    pass

@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (topic_file))
+---
+exit: 0
+checked 1 file -- no violations

@@ -3,13 +3,10 @@ source: tests/cli.rs
 expression: check(stringify! (too_deep))
 ---
 exit: 1
-error[folder]: no pattern matched
-  --> src/features/auth/login/forms/fields/functions/render.py
+error[folder]: folders nest 4 deep below the root, and the limit is 3
+  --> src/features/auth/login/forms
+      src/features/billing/reports/quarterly
    |
-   | no pattern places files 6 folders below `src/`
-   |
-   = tried: {root}/{folder1}/{folder2}/{folder3}/{kind}/{files}
-            {root}/{folder1}/{folder2}/{kind}/{files}
-            {root}/{folder1}/{kind}/{files}
+   = flatten a level, or split the tree into two roots
 
-checked 1 file -- 1 violation
+checked 2 files -- 2 violations

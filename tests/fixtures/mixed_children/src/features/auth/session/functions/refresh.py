@@ -1,2 +1,0 @@
-def refresh() -> None:
-    pass

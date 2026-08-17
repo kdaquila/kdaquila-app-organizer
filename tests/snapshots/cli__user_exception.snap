@@ -2,5 +2,12 @@
 source: tests/cli.rs
 expression: check(stringify! (user_exception))
 ---
-exit: 0
-checked 3 files -- no violations
+exit: 1
+error[size]: 10 lines of code, and the budget is 8
+  --> src/features/auth/authenticate.py
+   |
+   | blank lines and comments are not counted
+   |
+   = pull a private helper out into its own file, or split the export in two
+
+checked 2 files -- 1 violation

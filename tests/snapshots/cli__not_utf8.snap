@@ -4,7 +4,7 @@ expression: check(stringify! (not_utf8))
 ---
 exit: 1
 error[content]: could not read this file as UTF-8
-  --> src/features/auth/functions/broken.py
+  --> src/features/auth/broken.py
    |
    | stream did not contain valid UTF-8
    | its contents are not checked

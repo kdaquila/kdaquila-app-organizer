@@ -2,10 +2,10 @@ import pytest
 
 
 @pytest.fixture
-def client() -> str:
-    return "client"
+def user() -> str:
+    return "ada"
 
 
 @pytest.fixture
-def token() -> str:
-    return "token"
+def secret() -> str:
+    return "hunter2"

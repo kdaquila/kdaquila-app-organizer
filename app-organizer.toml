@@ -1,0 +1,11 @@
+# app-organizer, checking itself.
+#
+# Only `src` is a root. `tests/` holds cargo integration tests and
+# `tests/fixtures/**` -- small fake repos that are deliberately full of
+# violations, and of Python at that. Declaring `tests` and then waiving every
+# rule under `fixtures/` would be a nine-line dodge for the same result; not
+# declaring it is the honest reading, because the fixtures are data rather than
+# application source.
+
+[roots]
+src = "rust"

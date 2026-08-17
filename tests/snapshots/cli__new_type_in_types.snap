@@ -1,6 +1,0 @@
----
-source: tests/cli.rs
-expression: check(stringify! (new_type_in_types))
----
-exit: 0
-checked 1 file -- no violations

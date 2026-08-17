@@ -3,8 +3,8 @@ source: tests/cli.rs
 expression: check(stringify! (conflicting_rename))
 ---
 exit: 1
-error[naming]: file name does not match public name `process`
-  --> src/features/auth/functions/Foo-Bar.py:1
+error[naming]: file name does not match its export `def process`
+  --> src/features/auth/Foo-Bar.py:1
    |
    = rename to process.py
 
