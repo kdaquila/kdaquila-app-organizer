@@ -5,6 +5,19 @@
 Linters check the code *inside* your files. This checks where the files live,
 what they are called, and whether each one is about one thing.
 
+| rule | what it enforces |
+|---|---|
+| `single_primary_export` | at most one `fn`/`struct`/`enum`/`trait` (Rust) or `def`/`class` (Python) per file — **zero is legal** |
+| `filename_matches_export` | the filename is that export's name, in the language's one casing |
+| `name_casing` | folders, and files with no such export, obey that same casing |
+| `max_file_lines` | 200 non-blank non-comment lines, only for files that have such an export |
+| `folder_depth` | at most 3 folders below a root |
+
+Plus two that keep the tool honest rather than opinionated:
+`root_language_match` (a `.rs` file under a root declared python is an error)
+and `file_is_readable` (never count a file as checked and then say nothing
+about it).
+
 ```
 error[content]: file exports 2 substantial things, expected 1
   --> src/features/auth/authenticate.py:5
@@ -40,7 +53,7 @@ Exit codes: `0` clean, `1` violations found, `2` the tool itself failed.
 
 ## The conventions
 
-Four rules, and the whole point is the first one.
+Four ideas, seven rule names — and the whole point is the first one.
 
 ### 1. At most one *substantial* export per file
 
@@ -80,10 +93,18 @@ handles case-only renames badly.
 That is the whole folder grammar. Where files sit is up to you; how far down
 they sit is not.
 
-There is no mandated top-level vocabulary. `app-organizer init` scaffolds a
-suggested tree, but a library legitimately organises by topic
-(`config/`, `rules/`, `lang/`) where an application organises by feature, and
-the tool cannot know which you are.
+There is no mandated top-level vocabulary, because a library legitimately
+organises by topic (`config/`, `rules/`, `lang/`) where an application organises
+by feature, and the tool cannot know which you are. If you want somewhere to
+start, `app-organizer init` writes this into the seeded config as a comment —
+guidance, not scaffolding, and it creates no directories:
+
+```
+src/app/          composition root: wiring, settings, entry points
+src/features/     one folder per feature; the bulk of the code
+src/pages/        routes or screens, if the framework has them
+src/shared/       what more than one feature needs
+```
 
 ### 4. Files with a substantial export stay under 200 lines
 
