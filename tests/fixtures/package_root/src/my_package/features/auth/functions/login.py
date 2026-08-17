@@ -1,2 +1,0 @@
-def login() -> None:
-    pass

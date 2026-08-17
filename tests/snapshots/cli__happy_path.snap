@@ -3,4 +3,4 @@ source: tests/cli.rs
 expression: check(stringify! (happy_path))
 ---
 exit: 0
-checked 5 files -- no violations
+checked 6 files -- no violations

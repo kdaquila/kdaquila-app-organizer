@@ -4,7 +4,7 @@ expression: check(stringify! (invalid_syntax))
 ---
 exit: 1
 error[content]: could not parse this file
-  --> src/features/auth/functions/broken.py
+  --> src/features/auth/broken.py
    |
    | its contents are not checked; fix the syntax error first
 

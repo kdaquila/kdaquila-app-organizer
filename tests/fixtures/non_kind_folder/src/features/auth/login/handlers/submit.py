@@ -1,2 +1,0 @@
-def submit() -> None:
-    pass

@@ -3,8 +3,8 @@ source: tests/cli.rs
 expression: check(stringify! (bad_filename_casing))
 ---
 exit: 1
-error[naming]: `LoginHandler.py` is not snake_case
-  --> src/features/auth/functions/LoginHandler.py
+error[naming]: file name does not match its export `def login_handler`
+  --> src/features/auth/LoginHandler.py:1
    |
    = rename to login_handler.py
 

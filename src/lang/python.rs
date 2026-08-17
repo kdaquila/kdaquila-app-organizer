@@ -1,23 +1,13 @@
-//! Python's answers to the two seam questions, via tree-sitter.
+//! Python's answer to the seam question, via tree-sitter.
 //!
-//! Targets Python 3.12+, which is what makes the type layer mechanically
-//! checkable: PEP 695 gives aliases a keyword (`type X = int`) and inlines
-//! `TypeVar`/`ParamSpec` out of module scope entirely. The stragglers that
-//! stay assignments are all trivially detectable calls.
+//! Exported means "top-level and not `_`-prefixed" — the language has no
+//! visibility keyword, so the advisory convention is the only signal there is.
+//! That excludes dunders (`__version__`, `__all__`) for free.
 
-use super::{Denotation, LanguageProfile, Module, PublicName};
+use super::{LanguageProfile, Module, PublicName, code_lines};
 use crate::config::Language;
 use std::collections::HashSet;
 use tree_sitter::Node;
-
-/// Calls that introduce a type even though they are spelled as assignments.
-///
-/// `NewType` is nominal rather than interchangeable, so it is not an alias and
-/// cannot use the `type` keyword. The type-parameter constructors are legacy
-/// under PEP 695 but still common, and they are certainly not *values* — the
-/// worst outcome here would be advising someone to move a `TypeVar` into
-/// `constants/`.
-const TYPE_CONSTRUCTORS: [&str; 4] = ["NewType", "TypeVar", "ParamSpec", "TypeVarTuple"];
 
 pub struct Python;
 
@@ -36,8 +26,8 @@ impl LanguageProfile for Python {
         }
         let Some(tree) = parser.parse(source, None) else {
             return Module {
-                names: Vec::new(),
                 has_syntax_errors: true,
+                ..Module::default()
             };
         };
 
@@ -49,13 +39,14 @@ impl LanguageProfile for Python {
         }
 
         // Dedupe by name, keeping the first: three `@overload` stubs plus an
-        // implementation are four AST nodes and one public name.
+        // implementation are four AST nodes and one export.
         let mut seen = HashSet::new();
         names.retain(|name: &PublicName| seen.insert(name.name.clone()));
 
         Module {
             names,
             has_syntax_errors: root.has_error(),
+            code_lines: code_lines(source, &tree, &[]),
         }
     }
 }
@@ -81,9 +72,9 @@ fn visit(node: Node, source: &str, out: &mut Vec<PublicName>) {
             }
         }
 
-        "function_definition" => push(node, "name", Denotation::Callable, source, out),
-        "class_definition" => push(node, "name", Denotation::Type, source, out),
-        "type_alias_statement" => push(node, "left", Denotation::Type, source, out),
+        "function_definition" => push(node, "name", "def", source, out),
+        "class_definition" => push(node, "name", "class", source, out),
+        "type_alias_statement" => push(node, "left", "type", source, out),
 
         "expression_statement" => {
             let mut cursor = node.walk();
@@ -98,33 +89,22 @@ fn visit(node: Node, source: &str, out: &mut Vec<PublicName>) {
     }
 }
 
-/// A module-level binding denotes a value, unless its right-hand side is one
-/// of the calls that genuinely introduce a type.
+/// Module-level bindings. `TypeVar`/`NewType` used to be picked out here so
+/// they could be steered into `types/`; with kind folders gone an assignment is
+/// just an assignment, and none of them are governed by default anyway.
 fn assignment(node: Node, source: &str, out: &mut Vec<PublicName>) {
-    let right = node.child_by_field_name("right");
-
     // `A = B = value` nests: recurse so both targets are counted.
-    if let Some(right) = right
+    if let Some(right) = node.child_by_field_name("right")
         && right.kind() == "assignment"
     {
         assignment(right, source, out);
     }
 
-    let is_call = right.is_some_and(|right| right.kind() == "call");
-    let denotes = match right {
-        Some(right) if is_type_constructor(right, source) => Denotation::Type,
-        _ => Denotation::Value,
-    };
-
     let Some(left) = node.child_by_field_name("left") else {
         return;
     };
     for target in targets(left) {
-        let name = text(target, source);
-        // `X = int` may well have been meant as an alias; `X = compute()`
-        // certainly was not, so only the former earns the suggestion.
-        let hint = (!is_call).then(|| format!("type {name} = ..."));
-        record(name, target, denotes, hint, out);
+        record(text(target, source), target, "assignment", out);
     }
 }
 
@@ -143,45 +123,23 @@ fn targets(left: Node) -> Vec<Node> {
     }
 }
 
-fn is_type_constructor(node: Node, source: &str) -> bool {
-    if node.kind() != "call" {
-        return false;
-    }
-    let Some(function) = node.child_by_field_name("function") else {
-        return false;
-    };
-    text(function, source)
-        .rsplit('.')
-        .next()
-        .is_some_and(|name| TYPE_CONSTRUCTORS.contains(&name))
-}
-
-fn push(node: Node, field: &str, denotes: Denotation, source: &str, out: &mut Vec<PublicName>) {
+fn push(node: Node, field: &str, construct: &'static str, source: &str, out: &mut Vec<PublicName>) {
     let Some(target) = node.child_by_field_name(field) else {
         return;
     };
     // A generic alias binds `Pair` in `type Pair[T] = tuple[T, T]`.
     let name_node = first_identifier(target).unwrap_or(target);
-    record(text(name_node, source), node, denotes, None, out);
+    record(text(name_node, source), node, construct, out);
 }
 
-fn record(
-    name: &str,
-    at: Node,
-    denotes: Denotation,
-    type_alias_hint: Option<String>,
-    out: &mut Vec<PublicName>,
-) {
-    // The leading-underscore convention is the single source of truth, and it
-    // excludes dunders (`__version__`, `__all__`) for free.
+fn record(name: &str, at: Node, construct: &'static str, out: &mut Vec<PublicName>) {
     if name.is_empty() || name.starts_with('_') {
         return;
     }
     out.push(PublicName {
         name: name.to_string(),
-        denotes,
+        construct,
         line: at.start_position().row + 1,
-        type_alias_hint,
     });
 }
 

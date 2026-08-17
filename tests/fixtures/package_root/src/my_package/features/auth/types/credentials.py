@@ -1,2 +1,0 @@
-class Credentials:
-    pass

@@ -4,9 +4,9 @@
 //! For a tool whose output *is* its product, reviewing wording changes as
 //! snapshot diffs is the right surface.
 //!
-//! Note: these fixtures rely on there being no `app-organizer.toml` at the
-//! crate root. One there would become the project root for every fixture that
-//! does not carry its own, and paths in the output would shift.
+//! Note: every fixture carries its own `app-organizer.toml`. Without one, the
+//! crate root's config would become their project root — the paths in the
+//! output would shift and nothing would be governed at all.
 
 use assert_cmd::Command;
 use std::path::{Path, PathBuf};
@@ -46,31 +46,31 @@ macro_rules! scenarios {
 
 scenarios!(
     happy_path,
-    // layer 1 — folder grammar
-    non_kind_folder,
-    mixed_children,
-    kind_subdirectory,
+    // folders
     too_deep,
-    // layer 2 — file naming
+    folder_casing,
+    // naming
     name_mismatch,
     bad_filename_casing,
     unfixable_filename,
     conflicting_rename,
-    // layer 3 — content
-    two_public_names,
-    no_public_names,
-    class_in_functions,
-    bare_alias_in_types,
-    new_type_in_types,
+    // content
+    two_governed_exports,
+    topic_file,
     pep695_alias,
     overload,
     type_checking,
-    type_var,
-    stray_names_in_constants,
     invalid_syntax,
     not_utf8,
-    // one structural cause across many files
-    src_layout,
+    // the line budget, and the files it deliberately does not apply to
+    too_many_lines,
+    long_constants_file,
+    // Rust
+    rust_happy_path,
+    rust_two_exports,
+    rust_pub_crate,
+    rust_private_only,
+    rust_too_long,
     // roots, extensions, and config
     foreign_extension,
     default_exceptions,
@@ -85,7 +85,7 @@ fn json_format_is_valid_json() {
     let output = Command::cargo_bin("app-organizer")
         .unwrap()
         .args(["check", "--format", "json"])
-        .arg(fixture("class_in_functions"))
+        .arg(fixture("two_governed_exports"))
         .output()
         .unwrap();
 

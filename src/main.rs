@@ -125,11 +125,22 @@ fn init(path: &Path, force: bool) -> Result<ExitCode, String> {
 const HEADER: &str = "\
 # app-organizer configuration, seeded with the built-in defaults.
 #
+# Where files sit is up to you -- only how deep they nest is checked. A shape
+# that works well for an application, if you want somewhere to start:
+#
+#   src/app/          composition root: wiring, settings, entry points
+#   src/features/     one folder per feature; the bulk of the code
+#   src/pages/        routes or screens, if the framework has them
+#   src/shared/       what more than one feature needs
+#
+# A library usually wants topical folders instead (`config/`, `parser/`), which
+# is why this is a suggestion in a comment rather than a rule.
+#
 # Anything deleted here falls back to its default, so this file can be trimmed
 # down to only the lines you actually change -- `[roots]` is usually the whole
-# of it. `kinds`, `patterns` and `segments` replace the default when present;
-# `exceptions` are *added* to the defaults, so deleting a default exception
-# from this file does not switch it off.
+# of it. `one_per_file`, `max_file_lines`, `max_folder_depth` and `name_case`
+# replace the default when present; `exceptions` are *added* to the defaults,
+# so deleting a default exception from this file does not switch it off.
 #
 # `app-organizer defaults` prints the effective result at any time.";
 

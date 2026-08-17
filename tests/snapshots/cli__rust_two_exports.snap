@@ -1,0 +1,12 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (rust_two_exports))
+---
+exit: 1
+error[content]: file exports 2 substantial things, expected 1
+  --> src/models.rs:5
+   |
+   | exports: struct User, enum Role
+   | move all but one to files of their own, or make them private
+
+checked 1 file -- 1 violation

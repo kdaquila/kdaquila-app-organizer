@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (rust_pub_crate))
+---
+exit: 1
+error[naming]: file name does not match its export `fn build_container`
+  --> src/wiring.rs:4
+   |
+   = rename to build_container.rs
+
+checked 1 file -- 1 violation

@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: check(stringify! (folder_casing))
+---
+exit: 1
+error[naming]: `UserAuth` is not snake_case
+  --> src/features/UserAuth
+   |
+   = rename to user_auth
+
+checked 1 file -- 1 violation

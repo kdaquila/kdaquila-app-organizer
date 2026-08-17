@@ -3,4 +3,4 @@ source: tests/cli.rs
 expression: check(stringify! (default_exceptions))
 ---
 exit: 0
-checked 10 files -- no violations
+checked 7 files -- no violations
